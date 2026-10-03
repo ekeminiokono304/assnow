@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: assnow-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - { key: DATABASE_URL, sync: false }
+      - { key: ADMIN_PASSWORD, sync: false }
+      - { key: SECRET_KEY, generateValue: true }
+      - { key: CRON_SECRET, generateValue: true }
+      - { key: CORS_ORIGINS, sync: false }
+      - { key: OWNER_WHATSAPP, sync: false }
+      - { key: WHATSAPP_TOKEN, sync: false }
+      - { key: WHATSAPP_PHONE_NUMBER_ID, sync: false }
+      - { key: WHATSAPP_VERIFY_TOKEN, sync: false }
+      - { key: WHATSAPP_APP_SECRET, sync: false }
+      - { key: PYTHON_VERSION, value: "3.12.7" }

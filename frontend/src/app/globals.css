@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+body { @apply bg-white text-ink antialiased; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.field { @apply w-full rounded-xl border border-snow-200 bg-white px-3.5 py-3 text-base outline-none focus:border-snow-500 focus:ring-2 focus:ring-snow-200; }
+.label { @apply mb-1 block text-sm font-medium text-ink/80; }
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold transition active:scale-[0.98]; }
