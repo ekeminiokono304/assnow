@@ -1,6 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
-import { API_URL, BOOK_MESSAGE, FREQUENCIES, PROPERTY_SIZES, SERVICES, waLink } from "@/lib/site";
+import { API_URL, FREQUENCIES, PROPERTY_SIZES, SERVICES, waLink } from "@/lib/site";
 import { Icon, WhatsAppIcon } from "./Icons";
 
 type Result = { id: number; est_low: number; est_high: number; frequency: string; message: string };
@@ -26,7 +26,7 @@ export default function QuoteForm() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [freq, setFreq] = useState("once");
-  const [summary, setSummary] = useState("");
+  const [waText, setWaText] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,8 +52,31 @@ export default function QuoteForm() {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(friendlyError(data.detail));
-      setSummary(`${SERVICES.find((s) => s.key === body.service)?.title}, ${body.rooms} room(s), ${body.address}`);
-      setResult(data);
+      const q = data as Result;
+      const service = SERVICES.find((s) => s.key === body.service)?.title ?? body.service;
+      const size = PROPERTY_SIZES.find((s) => s.key === body.property_size)?.label ?? body.property_size;
+      const frequency = FREQUENCIES.find((x) => x.key === body.frequency)?.label ?? body.frequency;
+      const date = body.preferred_date
+        ? new Date(`${body.preferred_date}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+        : "Flexible";
+      setWaText(
+        [
+          "Hello As Snow Cleaning & Pest Control,",
+          "",
+          `My name is ${body.name.trim()}. I requested a quote on your website and would like to proceed with booking.`,
+          "",
+          `Quote reference: #${q.id}`,
+          `Service: ${service}`,
+          `Property: ${size}, ${body.rooms} room(s)`,
+          `Location: ${body.address.trim()}`,
+          `Preferred date: ${date}`,
+          `Frequency: ${frequency}`,
+          `Estimated price: ${naira(q.est_low)} – ${naira(q.est_high)}`,
+          "",
+          "Please confirm the final price and available time. Thank you.",
+        ].join("\n"),
+      );
+      setResult(q);
     } catch (err) {
       setError(
         err instanceof TypeError
@@ -82,7 +105,7 @@ export default function QuoteForm() {
           className="btn mt-5 bg-wa text-white hover:bg-wa-dark"
           target="_blank"
           rel="noopener noreferrer"
-          href={waLink(`${BOOK_MESSAGE}\nQuote #${result.id}: ${summary}. Estimate ${naira(result.est_low)}-${naira(result.est_high)}.`)}
+          href={waLink(waText)}
         >
           <WhatsAppIcon /> Continue on WhatsApp
         </a>
