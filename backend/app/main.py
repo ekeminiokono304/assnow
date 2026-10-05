@@ -92,15 +92,22 @@ def create_quote(body: QuoteIn, request: Request, db: Session = Depends(get_db))
     pref = fmt_date(q.preferred_date) if q.preferred_date else "flexible"
     ok = whatsapp.notify_owner(
         db,
-        f"🧼 New quote request #{q.id}\n{SERVICES[q.service]} · {q.property_size} · {q.rooms} rooms\n"
-        f"{FREQUENCIES[q.frequency]} · date: {pref}\n{q.address}\n"
-        f"Est: {naira(low)}–{naira(high)}\n{q.name} +{q.phone}",
+        f"New quote request #{q.id}\n\n"
+        f"Customer: {q.name}\nPhone: +{q.phone}\n\n"
+        f"Service: {SERVICES[q.service]}\n"
+        f"Property: {q.property_size.capitalize()}, {q.rooms} room(s)\n"
+        f"Location: {q.address}\n"
+        f"Preferred date: {pref}\n"
+        f"Frequency: {FREQUENCIES[q.frequency]}\n\n"
+        f"Estimated price: {naira(low)} – {naira(high)}\n\n"
+        f"Please contact the customer on WhatsApp to confirm the final price and schedule.",
         [f"Quote #{q.id}", f"{SERVICES[q.service]} ({q.address})", f"{naira(low)}-{naira(high)}", f"{q.name} +{q.phone}"])
     q.owner_notified = 1 if ok else 0
     db.commit()
     return QuoteOut(
         id=q.id, est_low=low, est_high=high, frequency=q.frequency,
-        message="Thanks! We'll contact you on WhatsApp shortly to confirm the final price and time.")
+        message=f"Thank you, {q.name.strip().split()[0]}. Your quote request has been received. "
+                "Our team will contact you on WhatsApp shortly to confirm the final price and schedule.")
 
 
 # ---------------------------------------------------------------- admin
