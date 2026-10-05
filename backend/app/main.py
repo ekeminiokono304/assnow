@@ -30,10 +30,33 @@ async def lifespan(_: FastAPI):
     yield
 
 
+# ---------------------------------------------------------------- CORS
+# The production frontend is always allowed, even if CORS_ORIGINS is missing or
+# mistyped on Render. Anything in settings.cors_origins is added on top.
+DEFAULT_ORIGINS = [
+    "https://assnow.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+# Vercel preview deployments, e.g. https://assnow-git-main-<team>.vercel.app
+VERCEL_PREVIEW_REGEX = r"https://assnow-[a-z0-9-]+\.vercel\.app"
+
+
+def _cors_origins() -> list[str]:
+    raw = get_settings().cors_origins or []
+    if isinstance(raw, str):  # tolerate "a,b,c" as well as a list
+        raw = raw.split(",")
+    extra = [o.strip().rstrip("/") for o in raw if o and o.strip()]  # no trailing slashes
+    return list(dict.fromkeys(DEFAULT_ORIGINS + extra))  # de-duplicate, keep order
+
+
 app = FastAPI(title="As Snow Cleaning & Pest Control API", lifespan=lifespan)
 app.add_middleware(
-    CORSMiddleware, allow_origins=get_settings().cors_origins,
-    allow_methods=["GET", "POST", "PATCH"], allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=_cors_origins(),
+    allow_origin_regex=VERCEL_PREVIEW_REGEX,
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 _hits: dict[str, deque] = defaultdict(deque)
